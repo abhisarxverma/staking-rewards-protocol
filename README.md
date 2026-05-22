@@ -1,66 +1,107 @@
-## Foundry
+# ERC20 Staking Rewards Protocol ⚡
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+This repository contains my practice implementation of a **Staking Rewards Protocol** built while learning about ERC20 tokens and DeFi mechanics through the advanced Solidity and Foundry content from Cyfrin Updraft.
 
-Foundry consists of:
+This repository currently contains:
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- ✅ Basic staking rewards implementation
+- 🚧 Advanced production-style staking version (in progress)
 
-## Documentation
+---
 
-https://book.getfoundry.sh/
+# 🧠 Why I Built This
 
-## Usage
+After learning the fundamentals of ERC20 tokens, I wanted to build something closer to real DeFi protocols like:
 
-### Build
+- Aave
+- Curve
+- Synthetix
+- Convex
 
-```shell
-$ forge build
-```
+This project started as a simple staking contract to understand the complete staking flow:
 
-### Test
+1. Users stake ERC20 tokens
+2. Rewards accumulate over time
+3. Users claim rewards
+4. Users withdraw stake + rewards
 
-```shell
-$ forge test
-```
+As I progressed, I realized real protocols use much more advanced accounting systems for gas efficiency and fairness — so I decided to build both versions:
 
-### Format
+- a beginner-friendly version
+- and a more production-style implementation
 
-```shell
-$ forge fmt
-```
+---
 
-### Gas Snapshots
+# 📦 Basic Version Features
 
-```shell
-$ forge snapshot
-```
+The basic staking contract includes:
 
-### Anvil
+- ERC20 token staking
+- Reward token distribution
+- Time-based reward calculation
+- Claim rewards
+- Withdraw staked tokens
+- Exit function (withdraw + claim)
+- Owner reward funding
+- Configurable reward rate
 
-```shell
-$ anvil
-```
+Concepts practiced:
 
-### Deploy
+- `transferFrom`
+- ERC20 approvals
+- reward accounting
+- state updates before interactions
+- mappings
+- timestamp calculations
+- custom errors
+- access control
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+---
 
-### Cast
+# 🚀 Advanced Version (In Progress)
 
-```shell
-$ cast <subcommand>
-```
+The advanced version is being upgraded with production-style reward accounting similar to modern DeFi protocols.
 
-### Help
+Planned features:
 
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+- `rewardPerTokenStored` mechanism
+- `userRewardPerTokenPaid`
+- gas-optimized reward calculations
+- precision math handling
+- reward snapshots
+- improved security patterns
+- reentrancy protection
+- pausable staking
+- event indexing improvements
+- fuzz/invariant testing
+- production-grade Foundry test suite
+
+---
+
+# 🛠 Tech Stack
+
+- Solidity `^0.8.34`
+- Foundry
+- OpenZeppelin ERC20
+
+---
+
+# ⚠️ Note
+
+This repository is for educational and practice purposes.
+
+The contracts are not audited and should not be used in production.
+
+---
+
+# 👨‍💻 Learning Journey
+
+This is part of my journey toward becoming a strong full-stack Web3 developer focused on:
+
+- Smart Contract Development
+- Solidity
+- DeFi Protocols
+- Foundry
+- Next.js + Web3 integration
+
+More advanced DeFi projects coming soon 🚀

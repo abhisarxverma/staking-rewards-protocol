@@ -5,7 +5,7 @@ pragma solidity ^0.8.34;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract StakingRewards is ReentrancyGuard {
+contract StakingRewardsBasic is ReentrancyGuard {
 
     error StakingRewards__AmountCannotBeZero();
     error StakingRewards__InsufficientBalance();
@@ -41,9 +41,11 @@ contract StakingRewards is ReentrancyGuard {
     }
 
     function stake(uint256 amount) public {
+        
+        _updateRewards(msg.sender);
+
         if (amount == 0) revert StakingRewards__AmountCannotBeZero();
 
-        _updateRewards(msg.sender);
         stakedBalance[msg.sender] += amount;
         totalStaked += amount;
 
@@ -62,11 +64,13 @@ contract StakingRewards is ReentrancyGuard {
     }
 
     function withdraw(uint256 amount) public nonReentrant {
+
+        _updateRewards(msg.sender);
+
         if (amount > stakedBalance[msg.sender]) {
             revert StakingRewards__InsufficientBalance();
         }
 
-        _updateRewards(msg.sender);
         stakedBalance[msg.sender] -= amount;
         totalStaked -= amount;
 
@@ -77,7 +81,9 @@ contract StakingRewards is ReentrancyGuard {
     }
 
     function claimRewards() public nonReentrant {
-        // checks
+
+        _updateRewards(msg.sender);
+
         if (rewards[msg.sender] == 0) {
             revert StakingRewards__NoRewardsEarned();
         }
@@ -85,11 +91,9 @@ contract StakingRewards is ReentrancyGuard {
             revert StakingRewards__InsufficientRewardTokens();
         }
 
-        _updateRewards(msg.sender);
         uint256 rewardsToTransfer = rewards[msg.sender];
         rewards[msg.sender] = 0;
 
-        // Interactions
         bool success = rewardToken.transfer(msg.sender, rewardsToTransfer);
         require(success, "Transfer failed");
 
@@ -97,15 +101,17 @@ contract StakingRewards is ReentrancyGuard {
     }
 
     function exit() public nonReentrant {
+
+        _updateRewards(msg.sender);
+
         if (stakedBalance[msg.sender] == 0 && rewards[msg.sender] == 0) {
             revert StakingRewards__ZeroStakedBalanceAndZeroRewardsToClaim();
         }
 
-        _updateRewards(msg.sender);
 
         if (rewards[msg.sender] > 0) {
             uint256 rewardsToTransfer = rewards[msg.sender];
-            rewards[msg.sender] = 0; // to prevent reentrancy make state update before the transfer
+            rewards[msg.sender] = 0; 
             if (rewardToken.balanceOf(address(this)) < rewardsToTransfer) {
                 revert StakingRewards__InsufficientRewardTokens();
             }

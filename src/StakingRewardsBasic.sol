@@ -6,7 +6,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract StakingRewardsBasic is ReentrancyGuard {
-
     error StakingRewards__AmountCannotBeZero();
     error StakingRewards__InsufficientBalance();
     error StakingRewards__NoRewardsEarned();
@@ -33,7 +32,7 @@ contract StakingRewardsBasic is ReentrancyGuard {
     event RewardFunded(uint256 amount);
     event RewardRateUpdated(uint256 newRate);
 
-    constructor(IERC20 _stakingToken, IERC20 _rewardToken, uint256 _rewardRate)  {
+    constructor(IERC20 _stakingToken, IERC20 _rewardToken, uint256 _rewardRate) {
         stakingToken = _stakingToken;
         rewardToken = _rewardToken;
         rewardRate = _rewardRate;
@@ -41,7 +40,6 @@ contract StakingRewardsBasic is ReentrancyGuard {
     }
 
     function stake(uint256 amount) public {
-        
         _updateRewards(msg.sender);
 
         if (amount == 0) revert StakingRewards__AmountCannotBeZero();
@@ -64,7 +62,6 @@ contract StakingRewardsBasic is ReentrancyGuard {
     }
 
     function withdraw(uint256 amount) public nonReentrant {
-
         _updateRewards(msg.sender);
 
         if (amount > stakedBalance[msg.sender]) {
@@ -81,7 +78,6 @@ contract StakingRewardsBasic is ReentrancyGuard {
     }
 
     function claimRewards() public nonReentrant {
-
         _updateRewards(msg.sender);
 
         if (rewards[msg.sender] == 0) {
@@ -101,17 +97,15 @@ contract StakingRewardsBasic is ReentrancyGuard {
     }
 
     function exit() public nonReentrant {
-
         _updateRewards(msg.sender);
 
         if (stakedBalance[msg.sender] == 0 && rewards[msg.sender] == 0) {
             revert StakingRewards__ZeroStakedBalanceAndZeroRewardsToClaim();
         }
 
-
         if (rewards[msg.sender] > 0) {
             uint256 rewardsToTransfer = rewards[msg.sender];
-            rewards[msg.sender] = 0; 
+            rewards[msg.sender] = 0;
             if (rewardToken.balanceOf(address(this)) < rewardsToTransfer) {
                 revert StakingRewards__InsufficientRewardTokens();
             }
@@ -128,7 +122,7 @@ contract StakingRewardsBasic is ReentrancyGuard {
     }
 
     modifier onlyOwner() {
-        if (msg.sender != owner){
+        if (msg.sender != owner) {
             revert StakingRewards__SenderNotOwner();
         }
         _;

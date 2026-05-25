@@ -4,8 +4,11 @@ pragma solidity ^0.8.34;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract StakingRewardsBasic is ReentrancyGuard {
+    using SafeERC20 for IERC20;
+
     error StakingRewards__AmountCannotBeZero();
     error StakingRewards__InsufficientBalance();
     error StakingRewards__NoRewardsEarned();
@@ -13,6 +16,8 @@ contract StakingRewardsBasic is ReentrancyGuard {
     error StakingRewards__SenderNotOwner();
     error StakingRewards__RewardRateCannotBeZero();
     error StakingRewards__InsufficientRewardTokens();
+    error StakingRewards__NotAContractAddress();
+    error StakingRewards__InvalidTokenAddress();
 
     IERC20 public stakingToken;
     IERC20 public rewardToken;
@@ -33,6 +38,8 @@ contract StakingRewardsBasic is ReentrancyGuard {
     event RewardRateUpdated(uint256 newRate);
 
     constructor(IERC20 _stakingToken, IERC20 _rewardToken, uint256 _rewardRate) {
+        _validateERC20(_stakingToken);
+        _validateERC20(_rewardToken);
         stakingToken = _stakingToken;
         rewardToken = _rewardToken;
         rewardRate = _rewardRate;
@@ -47,8 +54,7 @@ contract StakingRewardsBasic is ReentrancyGuard {
         stakedBalance[msg.sender] += amount;
         totalStaked += amount;
 
-        bool success = stakingToken.transferFrom(msg.sender, address(this), amount);
-        require(success, "Transferfrom failed");
+        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
 
         emit Staked(msg.sender, amount);
     }
@@ -71,8 +77,7 @@ contract StakingRewardsBasic is ReentrancyGuard {
         stakedBalance[msg.sender] -= amount;
         totalStaked -= amount;
 
-        bool success = stakingToken.transfer(msg.sender, amount);
-        require(success, "Transfer failed");
+        stakingToken.safeTransfer(msg.sender, amount);
 
         emit Withdrawn(msg.sender, amount);
     }
@@ -90,8 +95,7 @@ contract StakingRewardsBasic is ReentrancyGuard {
         uint256 rewardsToTransfer = rewards[msg.sender];
         rewards[msg.sender] = 0;
 
-        bool success = rewardToken.transfer(msg.sender, rewardsToTransfer);
-        require(success, "Transfer failed");
+        rewardToken.safeTransfer(msg.sender, rewardsToTransfer);
 
         emit RewardClaimed(msg.sender, rewardsToTransfer);
     }
@@ -109,15 +113,13 @@ contract StakingRewardsBasic is ReentrancyGuard {
             if (rewardToken.balanceOf(address(this)) < rewardsToTransfer) {
                 revert StakingRewards__InsufficientRewardTokens();
             }
-            bool rewardsTransferSuccess = rewardToken.transfer(msg.sender, rewardsToTransfer);
-            require(rewardsTransferSuccess, "Rewards transfer failed");
+            rewardToken.safeTransfer(msg.sender, rewardsToTransfer);
         }
 
         if (stakedBalance[msg.sender] > 0) {
             uint256 balanceToReturn = stakedBalance[msg.sender];
             stakedBalance[msg.sender] = 0;
-            bool balanceReturnTransfer = stakingToken.transfer(msg.sender, balanceToReturn);
-            require(balanceReturnTransfer, "Staked balance return transfer failed");
+            stakingToken.safeTransfer(msg.sender, balanceToReturn);
         }
     }
 
@@ -133,8 +135,7 @@ contract StakingRewardsBasic is ReentrancyGuard {
             revert StakingRewards__AmountCannotBeZero();
         }
 
-        bool success = rewardToken.transferFrom(owner, address(this), amount);
-        require(success, "Transfer failed");
+        rewardToken.safeTransferFrom(owner, address(this), amount);
 
         emit RewardFunded(amount);
     }
@@ -151,5 +152,21 @@ contract StakingRewardsBasic is ReentrancyGuard {
     function earned(address user) public view returns (uint256) {
         uint256 currentRewardDuration = block.timestamp - stakingTimestamp[user];
         return rewards[user] + (stakedBalance[user] * currentRewardDuration * rewardRate) / 1e18;
+    }
+
+    function _validateERC20(address token) internal view {
+        uint256 size;
+        assembly {
+            size := extcodesize(token)
+        }
+        if (size == 0) revert StakingRewards__NotAContractAddress();
+
+        (bool success, bytes memory data) = token.staticcall(
+            abi.encodeWithSignature("totalSupply()")
+        );
+        
+        if (!success || data.length == 0) {
+            revert StakingRewards__InvalidTokenAddress();
+        }
     }
 }

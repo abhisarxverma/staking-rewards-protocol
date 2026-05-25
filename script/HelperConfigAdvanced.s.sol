@@ -23,8 +23,8 @@ contract HelperConfig is Script {
 
     function getSepoliaConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
-            stakingToken: 0x779877A7B0D9E8603169DdbD7836e478b4624789, // Example Sepolia Link Token
-            rewardToken: 0x94a3429943CD46156B82c2A7697475f80b27DfBA,  // Example Sepolia Wrapped BTC
+            stakingToken: 0xd67215fD6c0890493F34aF3C5E4231cE98871fCb, // DAI
+            rewardToken: 0xE815718D44694ec4637CB775C468d87f6e15B538,  // USDC
             rewardsDuration: 7 days
         });
     }

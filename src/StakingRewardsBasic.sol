@@ -16,11 +16,9 @@ contract StakingRewardsBasic is ReentrancyGuard {
     error StakingRewards__SenderNotOwner();
     error StakingRewards__RewardRateCannotBeZero();
     error StakingRewards__InsufficientRewardTokens();
-    error StakingRewards__NotAContractAddress();
-    error StakingRewards__InvalidTokenAddress();
 
-    IERC20 public stakingToken;
-    IERC20 public rewardToken;
+    IERC20 public immutable stakingToken;
+    IERC20 public immutable rewardToken;
 
     address owner;
 
@@ -38,8 +36,6 @@ contract StakingRewardsBasic is ReentrancyGuard {
     event RewardRateUpdated(uint256 newRate);
 
     constructor(IERC20 _stakingToken, IERC20 _rewardToken, uint256 _rewardRate) {
-        _validateERC20(_stakingToken);
-        _validateERC20(_rewardToken);
         stakingToken = _stakingToken;
         rewardToken = _rewardToken;
         rewardRate = _rewardRate;
@@ -152,21 +148,5 @@ contract StakingRewardsBasic is ReentrancyGuard {
     function earned(address user) public view returns (uint256) {
         uint256 currentRewardDuration = block.timestamp - stakingTimestamp[user];
         return rewards[user] + (stakedBalance[user] * currentRewardDuration * rewardRate) / 1e18;
-    }
-
-    function _validateERC20(address token) internal view {
-        uint256 size;
-        assembly {
-            size := extcodesize(token)
-        }
-        if (size == 0) revert StakingRewards__NotAContractAddress();
-
-        (bool success, bytes memory data) = token.staticcall(
-            abi.encodeWithSignature("totalSupply()")
-        );
-        
-        if (!success || data.length == 0) {
-            revert StakingRewards__InvalidTokenAddress();
-        }
     }
 }

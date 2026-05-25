@@ -24,6 +24,8 @@ contract StakingRewardsAdvanced is ReentrancyGuard, Ownable {
     error StakingRewards__InsufficientRewardBalance();
     error StakingRewards__InvalidAddress();
     error StakingRewards__RewardDurationCannotBeZero();
+    error StakingRewards__NotAContractAddress();
+    error StakingRewards__InvalidTokenAddress();
 
     /* //////////////////////////////////////////////////////////////
                              STORAGE VARIABLES
@@ -72,6 +74,9 @@ contract StakingRewardsAdvanced is ReentrancyGuard, Ownable {
         if (address(_stakingToken) == address(0)) revert StakingRewards__InvalidAddress();
         if (address(_rewardToken) == address(0)) revert StakingRewards__InvalidAddress();
         if (_rewardsDuration == 0) revert StakingRewards__RewardDurationCannotBeZero();
+
+        _validateERC20(_stakingToken);
+        _validateERC20(_rewardToken);
 
         stakingToken = _stakingToken;
         rewardToken = _rewardToken;
@@ -180,5 +185,24 @@ contract StakingRewardsAdvanced is ReentrancyGuard, Ownable {
         periodFinish = block.timestamp + rewardsDuration;
 
         emit RewardAdded(reward);
+    }
+
+    /* //////////////////////////////////////////////////////////////
+                             INTERNAL HELPER FUNCTIONS
+    ////////////////////////////////////////////////////////////// */
+    function _validateERC20(address token) internal view {
+        uint256 size;
+        assembly {
+            size := extcodesize(token)
+        }
+        if (size == 0) revert StakingRewards__NotAContractAddress();
+
+        (bool success, bytes memory data) = token.staticcall(
+            abi.encodeWithSignature("totalSupply()")
+        );
+        
+        if (!success || data.length == 0) {
+            revert StakingRewards__InvalidTokenAddress();
+        }
     }
 }
